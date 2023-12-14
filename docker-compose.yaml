@@ -1,0 +1,49 @@
+version: '3.7'
+services:
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    platform: linux/x86_64
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-volumes:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: fresheats-db
+
+  frontend-builder:
+    build:
+      context: ./docker/nodejs
+    command: npm run dev
+    # restart: always
+    container_name: frontend-builder-container
+    volumes:
+      - ./CC-Fresheats:/home/source/main
+
+  fresheats-app:
+    build:
+      context: ./docker/php
+    container_name: fresheats-app
+    volumes:
+      - ./CC-Fresheats/:/home/source/main
+    working_dir: /home/source/main
+
+  nginx:
+    build:
+      context: ./docker/nginx
+    container_name: todo-nginx
+    ports:
+      - "8000:80"
+    depends_on:
+      - fresheats-app
+    volumes:
+      - ./CC-Fresheats/:/home/source/main
+      
+volumes:
+  mysql-volumes:
+
+networks:
+  default:
+    name: fresheats-app-netword
